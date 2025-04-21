@@ -1,13 +1,5 @@
 #!/bin/bash
 
-# git clone 後のSetup
-# composer install
-# cp .env.example .env
-# php artisan key:generate
-# php artisan config:clear#!/bin/bash
-#
-
-
 # setup.sh
 #
 # このスクリプトは、リポジトリをクローンした後に
