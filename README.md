@@ -10,10 +10,14 @@
 
 ## 特徴 (Features)
 
-*   [ユーザー登録]
-*   [サインイン]
-*   [その他]
+* [ユーザー登録]
+* [サインイン]
+* [その他]
     *(今後実装予定の機能や、現在利用可能な機能をリストアップします)*
+
+## 子リポジトリ 予定(Sub-repositories)
+* [ベーシックWebサイト]
+* [インナーWebサイト]
 
 ## はじめ方 (Getting Started)
 
@@ -21,5 +25,5 @@
 
 ```bash
 # 例: クローン
-git clone https://github.com/your-username/opensaas.git
+git clone git@github.com:yohei10969/opensaas.git
 cd opensaas
