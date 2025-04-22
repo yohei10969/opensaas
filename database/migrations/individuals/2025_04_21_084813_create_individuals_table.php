@@ -17,9 +17,9 @@ return new class extends Migration
          * 
          */
         Schema::create('individuals', function (Blueprint $table) {
-            $table->string('uuid', 36)->primary();
-            $table->string('email', 255)->unique();
-            $table->string('password', 255);
+            $table->string('uuid', 36)->primary(); // uuid
+            $table->string('email', 255)->unique(); // email
+            $table->string('password', 255); // password
             $table->timestamps();
         });
     }

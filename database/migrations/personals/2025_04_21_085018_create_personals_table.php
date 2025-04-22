@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('personals', function (Blueprint $table) {
-            $table->id();
+            $table->string('individuals_uuid', 36)->primary(); // individuals テーブルの uuid を参照
+            $table->string('name', 50); // 
             $table->timestamps();
         });
     }
