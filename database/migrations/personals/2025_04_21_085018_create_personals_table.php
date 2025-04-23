@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('japanese', 50)->nullable(); // 名前・日本語
 
             $table->string('username', 30)->unique()->nullable(); // ユーザーネーム (一意、任意入力)
-            $table->string('penname', 30)->unique()->nullable(); // ペンネーム (一意、任意入力)
+            $table->string('penname', 30)->nullable(); // ペンネーム (一意、任意入力)
             $table->text('bio')->nullable(); // 自己紹介 (任意入力)
 
             $table->timestamps();
