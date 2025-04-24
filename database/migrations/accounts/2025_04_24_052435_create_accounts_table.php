@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('japanese', 100)->nullable(); // アカウント名・日本語
 
             $table->foreignUuid('administrator') // 管理者・UUID型の外部キーカラムを作成
-                  ->constrained('individuals', 'uuid'); // individualsテーブルのuuidカラムを参照
+            ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照 (外部キー)
+            ->onDelete('restrict'); // DBレベルで整合性を保つ
 
             $table->timestamps();
         });
