@@ -14,9 +14,17 @@ return new class extends Migration
         Schema::create('tokens', function (Blueprint $table) {
             $table->uuid('uuid')->primary(); // トークンID (UUID)
 
-            $table->foreignUuid('issuer') // 発行者・UUID型の外部キーカラムを作成
+            $table->foreignUuid('issuer') // 債務者(発行者)・UUID型の外部キーカラムを作成
                   ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
                   ->onDelete('restrict'); // 発行者個人がアカウントを消せないようにする
+            
+            /**
+             * 現所有者
+             * 債務者（発行者）と違うIDであれば債権者になる
+             */
+            $table->foreignUuid('holder') // UUID型の外部キーカラムを作成
+                  ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
+                  ->onDelete('restrict'); // 所有者がアカウントを消せないようにする
 
             /**
              * 
@@ -33,17 +41,39 @@ return new class extends Migration
              * 最大金利は20%
              * 最小金利は0%
              * 金利は0.01%まで設定可能
-             * 銭を取り扱わない
+             * 日本円の小数点単位である「銭」を取り扱わない
              */
-            $table->decimal('interest_rate', 4, 3)->default('0.010'); // 金利は1%をデフォルトとする 最大金利は
+            $table->decimal('interest_rate', 4, 3)->default('0.010');
 
-            $table->timestamp('issue_at'); // 発行日
+            /**
+             * 申請者
+             * ID が INSERT されていれば、取引希望者となる
+             * Null になるパターンは、
+             * ・取引が成立
+             * ・申請を取り下げた
+             * ・何らかの理由で所有者が断った
+             */
+            $table->foreignUuid('applicant') // UUID型の外部キーカラムを作成
+                  ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
+                  ->nullable()
+                  ->onDelete('restrict'); // 所有者がアカウントを消せないようにする
+
             /**
              * 償却は発行したトークンの「消去」を意味する
-             * 償還は「返済」を意味するため、取引を扱うテーブルで使用
+             * 償却後のトークンは原則取り扱いを禁止する
+             * 買い戻し（償還）できたとしても、償却されてなければ出品は可能
              * 
              */
-            $table->timestamp('retirement_at')->nullable(); // 償却日
+            // 出品中かどうか
+            $table->timestamp('sold_at')->nullable();
+            $table->timestamp('issued_at'); // 発行日
+
+            /**
+             * 推奨：償却が実行された場合、原則このトークンは使用しない。
+             */
+            $table->timestamp('amortized_at')->nullable(); // 償却日
+
+            $table->timestamps();
         });
     }
 
@@ -54,9 +84,9 @@ return new class extends Migration
     {
         Schema::table('tokens', function (Blueprint $table) {
             // テーブル削除前に外部キー制約を削除する (より安全)
-            if (Schema::hasColumn('tokens', 'issuer')) { // カラム存在チェック
-                $table->dropForeign(['issuer']);
-            }
+            // カラム存在チェック
+            if (Schema::hasColumn('tokens', 'issuer')) $table->dropForeign(['issuer']);
+            if (Schema::hasColumn('tokens', 'holder')) $table->dropForeign(['holder']);
         });
 
         Schema::dropIfExists('tokens');
