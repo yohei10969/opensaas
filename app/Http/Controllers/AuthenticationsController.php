@@ -73,7 +73,7 @@ class AuthenticationsController extends Controller
             $request->session()->regenerate();
 
             // 認証成功後、ホーム画面へリダイレクト
-            return redirect()->intended('home'); // intended はログイン前にアクセスしようとしたURLがあればそこへ、なければ 'home' へ
+            return redirect()->intended('/'); // intended はログイン前にアクセスしようとしたURLがあればそこへ、なければ トップページ へ
         }
 
         // 認証失敗時の処理
