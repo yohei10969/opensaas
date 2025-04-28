@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Individual;
+use App\Models\Personal;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException; // Auth::attempt の失敗時に使用
+use Illuminate\Support\Facades\DB; // DB ファサードを追加
+use Illuminate\Support\Facades\Log; // Log ファサードを追加 (エラーログ用)
 
 class AuthenticationsController extends Controller
 {
@@ -37,14 +40,48 @@ class AuthenticationsController extends Controller
             // 'password' => 'required|string|min:3|confirmed', // パスワードの確認(必要になったら)
         ]);
 
-        // ユーザー登録
-        $user = Individual::create($validatedData);
-        
-        // サインアップ後に自動的にログイン
-        Auth::login($user);
-        
-        // ログインが成功してる場合リダイレクト
-        return redirect()->route('home');
+        /***
+         * 
+         * 
+         * individuals には値が入っているが、
+         * personalsには値が入っていないというズレをなくすための処理
+         * 
+         * 
+         */
+        // DB トランザクション開始
+        DB::beginTransaction();
+
+        try {
+            // ユーザー登録 (Individual 作成)
+            $user = Individual::create($validatedData);
+
+            // Personal レコードを作成 (リレーションを利用)
+            Personal::create([
+                'individuals_uuid' => $user->uuid,
+            ]);
+
+            // トランザクションをコミット
+            DB::commit();
+
+            // サインアップ後に自動的にログイン
+            Auth::login($user);
+
+            // ログインが成功してる場合リダイレクト
+            return redirect()->route('home');
+
+        } catch (\Exception $e) {
+            // エラーが発生した場合、トランザクションをロールバック
+            DB::rollBack();
+
+            // エラーログを記録 (開発/デバッグ時に役立ちます)
+            Log::error('User signup failed: ' . $e->getMessage());
+
+            // ユーザーにエラーを通知
+            // ここでは ValidationException を再利用していますが、別のエラーページにリダイレクトしたり、専用のエラーメッセージを表示する方が親切な場合もあります。
+            throw ValidationException::withMessages([
+                 self::EMAIL => 'ユーザー登録処理中にエラーが発生しました。しばらくしてからもう一度お試しください。',
+            ]);
+        }
     }
 
 
