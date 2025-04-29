@@ -90,10 +90,11 @@ class AuthenticationsController extends Controller
      * サインインフォームの表示またはサインイン処理
      *
      * @param Request $request
+     * @param string|null $redirect カスタムリダイレクト先のパス (オプション)
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function signin(Request $request)
+    public function signin(Request $request, ?string $redirect = null)
     {
         // GETリクエストの場合、サインインフォームを表示
         if ($request->isMethod('get')) return view('sign',['route' => route('signin')]); // ここで'sign'ビューファイルを表示
@@ -110,7 +111,8 @@ class AuthenticationsController extends Controller
             $request->session()->regenerate();
 
             // 認証成功後、ホーム画面へリダイレクト
-            return redirect()->intended('/'); // intended はログイン前にアクセスしようとしたURLがあればそこへ、なければ トップページ へ
+            // intended はログイン前にアクセスしようとしたURLがあればそこへ、なければトップページへ
+            return redirect()->intended($redirect ?? '/');
         }
 
         // 認証失敗時の処理
