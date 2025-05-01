@@ -12,29 +12,43 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tokens', function (Blueprint $table) {
-            $table->uuid('uuid')->primary(); // トークンID (UUID)
 
-            $table->foreignUuid('issuer') // 債務者(発行者)・UUID型の外部キーカラムを作成
+            // トークンID (UUID)
+            $table->uuid('uuid')->primary();
+
+            /**
+             * どのワークスペースで発行されたか
+             * 原則トークンはワークスペース内での流通を基本とする
+             */
+            $table->uuid('workspaces_uuid') // UUID型の外部キーカラムを作成
+                  ->constrained('workspaces', 'uuid') // workspacesテーブルのuuidカラムを参照
+                  ->onDelete('restrict');
+            
+            /**
+             * 債務者（発行者）
+             */
+            $table->foreignUuid('issuer_uuid') // 債務者(発行者)・UUID型の外部キーカラムを作成
                   ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
                   ->onDelete('restrict'); // 発行者個人がアカウントを消せないようにする
             
             /**
              * 現所有者
-             * 債務者（発行者）と違うIDであれば債権者になる
+             * ・発行直後は issuer と同じ値になる
+             * ・債務者（発行者）と違うIDであれば債権者になる
              */
-            $table->foreignUuid('holder') // UUID型の外部キーカラムを作成
+            $table->foreignUuid('holder_uuid') // UUID型の外部キーカラムを作成
                   ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
                   ->onDelete('restrict'); // 所有者がアカウントを消せないようにする
 
             /**
              * 
-             * 1トークンの額は最大10万とする
-             * 1トークンの額は最小1000とする
+             * 1トークンの価値は最大10万とする
+             * 1トークンの価値は最小1000とする
              * 発行は 1000 - 10000 - 100000 この3つの発行のみ可能
              * これにより、流動性の向上を図る
              *
              */
-            $table->unsignedInteger('amount')->default(1000); // 1トークンあたりの額面 (例: 円)
+            $table->unsignedInteger('value')->default(1000); // 1トークンあたりの額面 (例: 円)
 
             /**
              * 金利はのデフォルト値を1%とする
@@ -53,9 +67,9 @@ return new class extends Migration
              * ・申請を取り下げた
              * ・何らかの理由で所有者が断った
              */
-            $table->foreignUuid('applicant') // UUID型の外部キーカラムを作成
-                  ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
+            $table->foreignUuid('applicant_uuid') // 取引申請者の個人UUID
                   ->nullable()
+                  ->constrained('individuals', 'uuid') // individualsテーブルのuuidカラムを参照
                   ->onDelete('restrict'); // 所有者がアカウントを消せないようにする
 
             /**
@@ -82,12 +96,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tokens', function (Blueprint $table) {
-            // テーブル削除前に外部キー制約を削除する (より安全)
-            // カラム存在チェック
-            if (Schema::hasColumn('tokens', 'issuer')) $table->dropForeign(['issuer']);
-            if (Schema::hasColumn('tokens', 'holder')) $table->dropForeign(['holder']);
-        });
+        // Schema::table('tokens', function (Blueprint $table) {
+        //     // テーブル削除前に外部キー制約を削除する (より安全)
+        //     // カラム存在チェック
+        //     if (Schema::hasColumn('tokens', 'issuer')) $table->dropForeign(['issuer']);
+        //     if (Schema::hasColumn('tokens', 'holder')) $table->dropForeign(['holder']);
+        // });
 
         Schema::dropIfExists('tokens');
     }
