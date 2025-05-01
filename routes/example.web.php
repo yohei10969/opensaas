@@ -4,35 +4,58 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\ApplicationsController;
 use App\Http\Controllers\AuthenticationsController;
+use App\Http\Controllers\ExchangesController;
 use App\Http\Controllers\GroupsController;
+use App\Http\Controllers\TokensController;
+use App\Http\Controllers\WorkspacesController;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
-
-
+/**
+ * ルート
+ */
 Route::get('/', function () {
     if (Auth::check()) {
         // ユーザーが認証済みの場合
-        return view('applications');
+        // return view('applications');
+
+        // AuthenticationsController のインスタンスを取得
+        $controller = app(WorkspacesController::class);
+        return $controller->index();
+
     } else {
         // ユーザーが認証されていない場合
         return view('sign');
     }
 })->name('home');
 
-
-Route::get('/{first}',[AccountsController::class,''])
-    ->where('first', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
-    ->name('accounts')
+/**
+ * Workspace
+ */
+Route::get('/{workspace}',[WorkspacesController::class,'show'])
+    ->where('workspace', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+    ->name('view.workspace')
     ->middleware('auth');
 
-Route::post('/accounts',[AccountsController::class,'store'])
-    ->name('create.account')
+
+Route::post('/workspaces',[WorkspacesController::class,'store'])
+    ->name('create.workspaces')
     ->middleware('auth');
+
+
+/**
+ * Exchange
+ */
+// Route::get('/{workspace}/exchanges',[ExchangesController::class,'index'])
+//     ->where('workspace', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+//     ->name('view.workspace')
+//     ->middleware('auth');
+
+
+// Route::get('/{workspace}/exchanges',[ExchangesController::class,'show'])
+//     ->where('workspace', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
+//     ->name('view.workspace')
+//     ->middleware('auth');
 
 // Route::get('/accounts/{first}',[GroupsController::class,'store'])
 
@@ -79,14 +102,21 @@ Route::match(['get', 'post'], '/signup', [AuthenticationsController::class, 'sig
     ->name('signup')
     ->middleware('guest');
 
-// Route::post('/personal',[AccountsController::class,'store'])->name('personal');
-
 /**
- * RESTfulっぽい
+ * RESTful
  */
-Route::post('/accounts',[AccountsController::class,'store'])->name('create.account');
-// Route::post('/accounts/{first}/groups',[GroupsController::class,'store'])
-//      ->where('first', '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
-//      ->name('create.group');
-Route::post('/groups',[GroupsController::class,'store'])
-     ->name('create.group');
+Route::post('/{workspace}/tokens',[TokensController::class,'issue'])
+     ->name('issue.token')
+     ->middleware('auth');
+
+Route::post('/{workspace}/tokens/amortize',[TokensController::class,'amortize'])
+     ->name('amortize.token')
+     ->middleware('auth');
+
+Route::post('/{workspace}/tokens/sells',[TokensController::class,'sell'])
+     ->name('sell.token')
+     ->middleware('auth');
+
+Route::post('/{workspace}/tokens/sells/all',[TokensController::class,'sellAll'])
+     ->name('all.sell.token')
+     ->middleware('auth');
