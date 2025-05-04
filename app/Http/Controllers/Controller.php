@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Auth;
 
 abstract class Controller
 {
+    protected const SIGNIN = 'signin';
+    protected const SIGNUP = 'signup';
+
     /**
      * 現在認証されているユーザーのUUIDを取得します。
      * 認証されていない場合は null を返します。
